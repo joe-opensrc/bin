@@ -50,9 +50,6 @@ then
  else
   if [[ "${only}" =~ , ]]
   then 
-    os="$( echo "${only}" | tr ',' '\n' | sort -n )" 
-    min="$( echo "${os}" | head -n 1 )"
-    max="$( echo "${os}" | tail -n 1 )"
     ao="-v only=${only}"
   fi
  fi
