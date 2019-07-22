@@ -1,0 +1,149 @@
+#!/bin/bash
+
+# basically an awk version of 'GNU-cut'
+# but allows multiple character field separator
+# TODO: finish field spec parsing
+
+min=1   # lowest record
+max=-1  # highest record
+len=-1  # used to calculate max=(min+len)
+FS=" "  # AWK FIELD SEPARATOR
+OFS="${FS}"
+only="" # return only the field specified (a bit like 'cut -f')
+
+OPTIND=
+while getopts 'F:m:M:o:l:' flag
+do
+ case "${flag}" in
+  F) FS="${OPTARG}";;
+  l) len=${OPTARG};;
+  m) min=${OPTARG};;
+  M) max=${OPTARG};;
+  o) only=${OPTARG};;
+ esac
+ shift $(( OPTIND - 1 ))
+ OPTIND=
+done
+
+# expect piped input from stdin or a specified file
+if [[ ! -p /dev/stdin && $# -eq 0 ]]
+then
+  echo -ne "\n$( basename $0 ) [-F <sep>] [-M <max>] [-l <len>] [-m <min>] [-o <only>] [file...]\n" >&2
+  echo -ne "\nWe Require Input;  either a file or stdin.\n\n" >&2
+  exit 1
+fi
+
+## max = min + len 
+if [[ ${max} -le 0 && ${len} -ne -1 ]]
+then
+ max=$(( ${min} + ${len} - 1 ))
+fi
+
+## parse only for min & max
+if [[ "x${only}" != "x" ]]
+then
+
+ if [[ "${only}" =~ ^[0-9]$ ]]
+ then
+  min="${only}"
+  max="${only}"
+ else
+  if [[ "${only}" =~ , ]]
+  then 
+    os="$( echo "${only}" | tr ',' '\n' | sort -n )" 
+    min="$( echo "${os}" | head -n 1 )"
+    max="$( echo "${os}" | tail -n 1 )"
+    ao="-v only=${only}"
+  fi
+ fi
+fi
+
+# run awk with args ;)
+awk -F"${FS}" -v "MINF=${min}" -v "MAXF=${max}" ${ao} '
+
+BEGIN { 
+  PROCINFO["sorted_in"] = "@ind_str_asc";
+  olen = split(only, os, ","); 
+} 
+
+{ 
+
+  # parse "only" spec; e.g., -o 1,3,5-
+  if( olen > 0 ){ 
+
+    # for each requested field 
+    for ( n=1; n <= olen; n++ ){          
+
+      # get field
+      x = os[n]               # e.g., 3 or 5-
+
+      # match "n-"; like "cut -f"
+        spec_len = split(x,spec,"-")
+
+        if ( spec_len == 0 ){
+
+          s=strtonum(x)
+          e=s
+
+        }else{
+
+          if ( spec_len == 2 ){
+            s=strtonum(spec[1])
+            e=NF
+
+          }
+
+        }
+
+      # printf("%s|%s\n", s, e );
+
+      # if the start is a valid field position
+      if ( s > 0 && s <= NF ){
+
+         if( s == e ){
+          printf("%s%s", $s, FS);
+         }else{
+
+           # print the field with separator
+           for ( i=s; i<e; i++ ){
+            if( i < e ){
+              printf("%s%s", $i, FS);
+            }else{
+              printf("%s", $i );
+            }
+           }
+        }
+  
+      }
+
+      # if this is the last specified field, print a newline
+      if( n == olen ){
+        printf("\n");
+      }
+      
+    }     
+
+
+  }else{
+   
+    # from min to max, print all fields
+    # check sensible bounds 
+    s=MINF < 1 ? 1 : MINF
+
+    e=MAXF; 
+    if ( e < 1 || e >= NF ){ e=NF; };
+
+    for ( i=s; i<=e; i++ ){
+      if( i >= MINF ){
+        if( i < e ){
+          printf("%s%s", $i, FS);
+        }else {
+          printf("%s\n", $i )
+        }
+      }
+    }
+  } 
+
+
+}' "${@}" 
+
