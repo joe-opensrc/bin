@@ -8,7 +8,7 @@ min=1   # lowest record
 max=-1  # highest record
 len=-1  # used to calculate max=(min+len)
 FS=" "  # AWK FIELD SEPARATOR
-OFS="${FS}"
+ofs="-v OFS=${FS}"
 only="" # return only the field specified (a bit like 'cut -f')
 
 cmd_name="$(basename ${0})"
@@ -83,12 +83,11 @@ then
     ao="-v only=${only}"
 
   fi
- # fi
-# fi
 
 # set -x
 # run awk with args ;)
-awk -F"${FS}" -v "MINF=${min}" -v "MAXF=${max}" ${ao} '
+# ofs="$( printf '%q' ${ofs})"
+awk -F"${FS}" -v "MINF=${min}" -v "MAXF=${max}" ${ofs} ${ao} '
 
 BEGIN { 
   PROCINFO["sorted_in"] = "@ind_str_asc";
