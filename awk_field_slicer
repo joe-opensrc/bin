@@ -11,14 +11,35 @@ FS=" "  # AWK FIELD SEPARATOR
 OFS="${FS}"
 only="" # return only the field specified (a bit like 'cut -f')
 
+cmd_name="$(basename ${0})"
+usage="
+
+  ${cmd_name} [-F <sep>] [-M <max>] [-l <len>] [-m <min>] [-o <only>] [file...]
+
+"
+examples="      
+  EXAMPLES: 
+
+  The following are all equivalent:
+
+    shell> echo 'a|b|c|d|e' | ${cmd_name} -F'|' -o 3,4
+    shell> echo 'a|b|c|d|e' | ${cmd_name} -F'|' -o 3-4
+    shell> echo 'a|b|c|d|e' | ${cmd_name} -F'|' -m 3 -M 4
+    shell> echo 'a|b|c|d|e' | ${cmd_name} -F'|' -m 3 -l 2
+
+"
+
 OPTIND=
-while getopts 'F:m:M:o:l:' flag
+while getopts 'F:M:O:hl:m:o:' flag
 do
  case "${flag}" in
   F) FS="${OPTARG}";;
+  M) max=${OPTARG};;
+  O) ofs="-v OFS=${OPTARG}";;
+  h) echo -n "${usage}${examples}"; 
+     exit 0;;
   l) len=${OPTARG};;
   m) min=${OPTARG};;
-  M) max=${OPTARG};;
   o) only=${OPTARG};;
  esac
  shift $(( OPTIND - 1 ))
