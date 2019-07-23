@@ -7,8 +7,8 @@
 min=1   # lowest record
 max=-1  # highest record
 len=-1  # used to calculate max=(min+len)
-FS=" "  # AWK FIELD SEPARATOR
-ofs=""
+FS=" "  # AWK FIELD SEPARATOR; SPACE.
+ofs=""  # AWK OUTPUT SEPARATOR
 only="" # return only the field specified (a bit like 'cut -f')
 
 cmd_name="$(basename ${0})"
@@ -62,20 +62,20 @@ ofs="${ofs:--v OFS=${FS}}"
 ## max = min + len 
 if [[ ${max} -le 0 && ${len} -ne -1 ]]
 then
- max=$(( ${min} + ${len} - 1 ))
+  max=$(( ${min} + ${len} - 1 ))
 fi
 
 ## parse only for min & max
 if [[ "x${only}" != "x" ]]
 then
 
-    # as evaluation of each element in the 'only' spec, changes the min/max bounds
-    # on an iterative basis; there is no real advantage to calculating min/max values here.
+    # evaluation of each element in the 'only' spec is iterative, and changes the min/max bounds
+    # therefore there is no real advantage to calculating min/max values here.
     min=1
     max='NF' 
     ao="-v only=${only}"
 
-  fi
+fi
 
 # run awk with args ;)
 awk -F"${FS}" -v "MINF=${min}" -v "MAXF=${max}" ${ao} ${ofs} '
@@ -117,13 +117,11 @@ BEGIN {
 
        # extract int values from o-spec
        split( n, o, "-" );  
-      
-       #could merge some, add a few others...
+     
+       # could perhaps merge the regex... 
        if ( n ~ /^-[0-9]+$/       ){ s=1; e=strtonum(o[2]); }
        if ( n ~ /^[0-9]+-$/       ){ s=strtonum(o[1]); e=NF;   }
        if ( n ~ /^[0-9]+-[0-9]+$/ ){ s=strtonum(o[1]); e=strtonum(o[2]); }
-       if ( n ~ /^[0-9]+-\$$/     ){ s=strtonum(o[1]); e=NF; }
-       if ( n ~ /^\^-[0-9]+$/     ){ s=1; e=strtonum(o[2]); }
 
      }
 
