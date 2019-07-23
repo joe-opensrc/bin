@@ -1,8 +1,8 @@
 #!/bin/bash
 
 # basically an awk version of 'GNU-cut'
-# but allows multiple character field separator
-# TODO: finish field spec parsing
+# but allows a multiple character field separator
+# and negative ranges
 
 min=1   # lowest record
 max=-1  # highest record
