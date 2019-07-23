@@ -70,15 +70,6 @@ fi
 if [[ "x${only}" != "x" ]]
 then
 
- # if only is a single integer, just set min/max vals
- # if [[ "${only}" =~ ^[0-9]$ ]]
- # then
-  # min="${only}"
-  # max="${only}"
- # else
-  # if [[ "${only}" =~ , ]]
-  # then 
-
     # as evaluation of each element in the 'only' spec, changes the min/max bounds
     # on an iterative basis; there is no real advantage to calculating min/max values here.
     min=1
