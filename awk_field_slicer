@@ -163,7 +163,25 @@ BEGIN {
 
   }
 
-}
+}else{
+
+   # from min to max, print all fields
+   # check sensible bounds 
+   s=MINF < 1 ? 1 : MINF
+
+   e=MAXF; 
+   if ( e < 1 || e >= NF ){ e=NF; };
+
+   for( i=s; i<=e; i++ ){
+     if( i >= MINF ){
+       if( i < e ){
+         printf("%s%s", $i, FS);
+       }else {
+         printf("%s\n", $i )
+       }
+     }
+   }
+ } 
 
 }
 
