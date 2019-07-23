@@ -43,104 +43,223 @@ fi
 if [[ "x${only}" != "x" ]]
 then
 
- if [[ "${only}" =~ ^[0-9]$ ]]
- then
-  min="${only}"
-  max="${only}"
- else
-  if [[ "${only}" =~ , ]]
-  then 
-    ao="-v only=${only}"
-  fi
- fi
-fi
+ # if only is a single integer, just set min/max vals
+ # if [[ "${only}" =~ ^[0-9]$ ]]
+ # then
+  # min="${only}"
+  # max="${only}"
+ # else
+  # if [[ "${only}" =~ , ]]
+  # then 
 
+    # as evaluation of each element in the 'only' spec, changes the min/max bounds
+    # on an iterative basis; there is no real advantage to calculating min/max values here.
+    min=1
+    max='NF' 
+    ao="-v only=${only}"
+
+  fi
+ # fi
+# fi
+
+# set -x
 # run awk with args ;)
 awk -F"${FS}" -v "MINF=${min}" -v "MAXF=${max}" ${ao} '
 
 BEGIN { 
   PROCINFO["sorted_in"] = "@ind_str_asc";
-  olen = split(only, os, ","); 
-} 
 
-{ 
-
-  # parse "only" spec; e.g., -o 1,3,5-
-  if( olen > 0 ){ 
-
-    # for each requested field 
-    for ( n=1; n <= olen; n++ ){          
-
-      # get field
-      x = os[n]               # e.g., 3 or 5-
-
-      # match "n-"; like "cut -f"
-        spec_len = split(x,spec,"-")
-
-        if ( spec_len == 0 ){
-
-          s=strtonum(x)
-          e=s
-
-        }else{
-
-          if ( spec_len == 2 ){
-            s=strtonum(spec[1])
-            e=NF
-
-          }
-
-        }
-
-      # printf("%s|%s\n", s, e );
-
-      # if the start is a valid field position
-      if ( s > 0 && s <= NF ){
-
-         if( s == e ){
-          printf("%s%s", $s, FS);
-         }else{
-
-           # print the field with separator
-           for ( i=s; i<e; i++ ){
-            if( i < e ){
-              printf("%s%s", $i, FS);
-            }else{
-              printf("%s", $i );
-            }
-           }
-        }
-  
-      }
-
-      # if this is the last specified field, print a newline
-      if( n == olen ){
-        printf("\n");
-      }
-      
-    }     
-
-
-  }else{
-   
-    # from min to max, print all fields
-    # check sensible bounds 
-    s=MINF < 1 ? 1 : MINF
-
-    e=MAXF; 
-    if ( e < 1 || e >= NF ){ e=NF; };
-
-    for ( i=s; i<=e; i++ ){
-      if( i >= MINF ){
-        if( i < e ){
-          printf("%s%s", $i, FS);
-        }else {
-          printf("%s\n", $i )
-        }
-      }
+  if ( only ){ 
+    # printf("only: %s\n", only );
+    olen = split(only, os, ","); 
+    if( olen == 0 ){
+      os[1] = only
     }
   } 
 
+  # debug=""
+} 
 
-}' "${@}" 
+{
+
+  # o-spec
+  oslen = length(os);
+  # printf("oslen: %d\n", oslen);
+  if ( oslen > 0 ){
+
+   for ( i=1; i<=oslen; i++ ){
+    
+     # if last spec element output newline
+     if ( i == oslen ){
+       sep = "\n";
+     }else{
+       sep = FS;
+     }
+
+     # calculate min/max from spec element
+     n = os[i]; 
+
+     if ( n ~ /^[0-9]+$/ ){ 
+       n=strtonum(n)
+       s=n; e=n; 
+        # printf("i:= s:%s,e:%s\n", s, e );
+     }
+
+     if ( n ~ /-/ ){
+
+       # extract int values from o-spec
+       split( n, o, "-" );  
+      
+       #could merge some, add a few others...
+       if ( n ~ /^-[0-9]+$/       ){ s=1; e=strtonum(o[2]); }
+       if ( n ~ /^[0-9]+-$/       ){ s=strtonum(o[1]); e=NF;   }
+       if ( n ~ /^[0-9]+-[0-9]+$/ ){ s=strtonum(o[1]); e=strtonum(o[2]); }
+       if ( n ~ /^[0-9]+-\$$/     ){ s=strtonum(o[1]); e=NF; }
+       if ( n ~ /^\^-[0-9]+$/     ){ s=1; e=strtonum(o[2]); }
+
+     }
+
+     # printf("s:%s,e:%s\n", s, e);
+
+     # debug = sprintf("%s\n n:%s,s:%s,e:%s", debug, n, s, e);
+
+     # bounds check per section
+     # question? do we silently set min(e,NF)?
+          
+          
+        # printf("s:%s,e:%s\n", s, e );
+
+        if ( s == e ){
+            if ( s > 0 || s <= NF ){ 
+              printf("%s%s", $s, sep );
+            }
+        }else{
+
+          if( s <= e ){
+             
+              # silently limit upper bound to NF
+              e=( e > NF ? NF : e );
+
+              for( j=s; j<e; j++ ){
+                printf("%s%s", $j, FS );            
+              }
+
+              printf("%s%s", $e, sep);
+
+            }else{ 
+
+                
+                # printf("s:%s,e:%s\n", s, e);
+                s=( s > NF ? NF : s )
+                e=( e == 0 ? 1 : e )
+                for( j=s; j>e; j-- ){
+                  printf("%s%s", $j, FS );           
+                }
+                printf("%s%s", $e, sep);
+
+            }
+          }
+          # printf("s:%s,e:%s\n", s, e );
+
+  }
+
+}
+
+}
+
+END{
+ # printf("debug: %s\n", debug );
+}
+
+' "${@}" 
+
+
+
+
+
+# BEGIN { 
+#   PROCINFO["sorted_in"] = "@ind_str_asc";
+#   olen = split(only, os, ","); 
+# } 
+
+# { 
+
+#   # parse "only" spec; e.g., -o 1,3,5-
+#   if( olen > 0 ){ 
+
+#     # for each requested fild 
+#     for ( n=1; n <= olen; n++ ){          
+
+#       # get field
+#       x = os[n]               # e.g., 3 or 5-
+
+#       # match "n-"; like "cut -f"
+#         slen = split(x,spec,"-")
+        
+#         if ( slen == 0 ){
+
+#           s=strtonum(x)
+#           e=s
+
+#         }else{
+
+#           if ( slen == 2 ){
+#             s=strtonum(spec[1])
+#             e=NF
+
+#           }
+
+#         }
+
+#       # printf("%s|%s\n", s, e );
+
+#       # if the start is a valid field position
+#       if ( s > 0 && s <= NF ){
+
+#          if( s == e ){
+#           printf("%s%s", $s, FS);
+#          }else{
+
+#            # print the field with separator
+#            for ( i=s; i<e; i++ ){
+#             if( i < e ){
+#               printf("%s%s", $i, FS);
+#             }else{
+#               printf("%s", $i );
+#             }
+#            }
+#         }
+  
+#       }
+
+#       # if this is the last specified field, print a newline
+#       if( n == olen ){
+#         printf("\n");
+#       }
+      
+#     }     
+
+
+#   }else{
+   
+#     # from min to max, print all fields
+#     # check sensible bounds 
+#     s=MINF < 1 ? 1 : MINF
+
+#     e=MAXF; 
+#     if ( e < 1 || e >= NF ){ e=NF; };
+
+#     for ( i=s; i<=e; i++ ){
+#       if( i >= MINF ){
+#         if( i < e ){
+#           printf("%s%s", $i, FS);
+#         }else {
+#           printf("%s\n", $i )
+#         }
+#       }
+#     }
+#   } 
+
+
+# }' "${@}" 
 
