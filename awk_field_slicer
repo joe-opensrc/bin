@@ -46,7 +46,6 @@ do
  OPTIND=
 done
 
-
 # expect piped input from stdin or a specified file
 if [[ ! -p /dev/stdin && $# -eq 0 ]]
 then
