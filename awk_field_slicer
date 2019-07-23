@@ -14,8 +14,17 @@ only="" # return only the field specified (a bit like 'cut -f')
 cmd_name="$(basename ${0})"
 usage="
 
-  ${cmd_name} [-F <sep>] [-M <max>] [-l <len>] [-m <min>] [-o <only>] [file...]
+  ${cmd_name} [-F <sep>] [-M <max>] [-O <sep>] [-l <len>] [-m <min>] [-o <only>] [file...]
 
+  -F <sep>  := field separator, FS (default: ' ')
+  -M <max>  := integer of highest field number (default: NF)
+  -O <sep>  := awk output field separator (defaults to FS)
+  -l <len>  := number of fields to return (can be used in conjunction with '-m')
+  -m <min>  := integer of lowest field number (default: 1)
+  -o <only> := string representation of field specifier (similar to GNU-cut)
+             \ takes the following form: (n|n-|n-m|-n|n-$)[,...]
+             \ see EXAMPLES below
+             
 "
 examples="      
   EXAMPLES: 
