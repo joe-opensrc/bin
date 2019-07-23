@@ -46,11 +46,14 @@ do
  OPTIND=
 done
 
+
 # expect piped input from stdin or a specified file
 if [[ ! -p /dev/stdin && $# -eq 0 ]]
 then
-  echo -ne "\n$( basename $0 ) [-F <sep>] [-M <max>] [-l <len>] [-m <min>] [-o <only>] [file...]\n" >&2
-  echo -ne "\nWe Require Input;  either a file or stdin.\n\n" >&2
+  echo -n "
+  Egg: We found no input! 
+  ${usage}
+  " >&2
   exit 1
 fi
 
