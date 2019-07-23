@@ -8,7 +8,7 @@ min=1   # lowest record
 max=-1  # highest record
 len=-1  # used to calculate max=(min+len)
 FS=" "  # AWK FIELD SEPARATOR
-ofs="-v OFS=${FS}"
+ofs=""
 only="" # return only the field specified (a bit like 'cut -f')
 
 cmd_name="$(basename ${0})"
@@ -57,6 +57,9 @@ then
   exit 1
 fi
 
+# if not specified, set OFS to FS
+ofs="${ofs:--v OFS=${FS}}"
+
 ## max = min + len 
 if [[ ${max} -le 0 && ${len} -ne -1 ]]
 then
@@ -84,10 +87,8 @@ then
 
   fi
 
-# set -x
 # run awk with args ;)
-# ofs="$( printf '%q' ${ofs})"
-awk -F"${FS}" -v "MINF=${min}" -v "MAXF=${max}" ${ofs} ${ao} '
+awk -F"${FS}" -v "MINF=${min}" -v "MAXF=${max}" ${ao} ${ofs} '
 
 BEGIN { 
   PROCINFO["sorted_in"] = "@ind_str_asc";
@@ -105,6 +106,7 @@ BEGIN {
 
 {
 
+  sep = OFS;
   # o-spec
   oslen = length(os);
   # printf("oslen: %d\n", oslen);
@@ -112,13 +114,6 @@ BEGIN {
 
    for ( i=1; i<=oslen; i++ ){
     
-     # if last spec element output newline
-     if ( i == oslen ){
-       sep = "\n";
-     }else{
-       sep = FS;
-     }
-
      # calculate min/max from spec element
      n = os[i]; 
 
@@ -153,7 +148,9 @@ BEGIN {
         # printf("s:%s,e:%s\n", s, e );
 
         if ( s == e ){
+
             if ( s > 0 || s <= NF ){ 
+              if( i == oslen ){ sep = "\n"; }
               printf("%s%s", $s, sep );
             }
         }else{
@@ -164,9 +161,10 @@ BEGIN {
               e=( e > NF ? NF : e );
 
               for( j=s; j<e; j++ ){
-                printf("%s%s", $j, FS );            
+                printf("%s%s", $j, sep );            
               }
 
+              if ( i == oslen ){ sep = "\n"; }
               printf("%s%s", $e, sep);
 
             }else{ 
@@ -176,8 +174,10 @@ BEGIN {
                 s=( s > NF ? NF : s )
                 e=( e == 0 ? 1 : e )
                 for( j=s; j>e; j-- ){
-                  printf("%s%s", $j, FS );           
+                  printf("%s%s", $j, sep );           
                 }
+
+                if( i == oslen ){ sep = "\n"; }
                 printf("%s%s", $e, sep);
 
             }
@@ -198,7 +198,7 @@ BEGIN {
    for( i=s; i<=e; i++ ){
      if( i >= MINF ){
        if( i < e ){
-         printf("%s%s", $i, FS);
+         printf("%s%s", $i, sep);
        }else {
          printf("%s\n", $i )
        }
