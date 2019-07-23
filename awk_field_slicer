@@ -102,7 +102,6 @@ BEGIN {
     }
   } 
 
-  # debug=""
 } 
 
 {
@@ -142,7 +141,6 @@ BEGIN {
      # question? do we silently set min(e,NF)?
           
           
-     # debug = sprintf("%s\n n:%s,s:%s,e:%s,sep:\"%s\"", debug, n, s, e, sep);
         # printf("s:%s,e:%s\n", s, e );
 
         if ( s == e ){
@@ -207,9 +205,6 @@ BEGIN {
 
 }
 
-END{
- # printf("debug: %s\n", debug );
-}
 
 ' "${@}" 
 
