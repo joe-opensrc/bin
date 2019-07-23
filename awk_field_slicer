@@ -130,12 +130,11 @@ BEGIN {
 
      # printf("s:%s,e:%s\n", s, e);
 
-     # debug = sprintf("%s\n n:%s,s:%s,e:%s", debug, n, s, e);
-
      # bounds check per section
      # question? do we silently set min(e,NF)?
           
           
+     # debug = sprintf("%s\n n:%s,s:%s,e:%s,sep:\"%s\"", debug, n, s, e, sep);
         # printf("s:%s,e:%s\n", s, e );
 
         if ( s == e ){
@@ -144,6 +143,7 @@ BEGIN {
               if( i == oslen ){ sep = "\n"; }
               printf("%s%s", $s, sep );
             }
+            
         }else{
 
           if( s <= e ){
