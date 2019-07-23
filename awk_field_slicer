@@ -4,6 +4,8 @@
 # but allows a multiple character field separator
 # and negative ranges
 
+# did I mention it's a bit like GNU-cut ;)
+
 min=1   # lowest record
 max=-1  # highest record
 len=-1  # used to calculate max=(min+len)
