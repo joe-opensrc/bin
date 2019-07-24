@@ -92,115 +92,142 @@ fi
 awk -F"${FS}" -v "MINF=${min}" -v "MAXF=${max}" ${ao} ${ofs} '
 
 BEGIN { 
+
+  # no longer sure why we specify the array sort order here ;)
   PROCINFO["sorted_in"] = "@ind_str_asc";
 
+  # if an only-spec has been specified
   if ( only ){ 
-    # printf("only: %s\n", only );
+
     olen = split(only, os, ","); 
+  
+    # if only a single element is specified
     if( olen == 0 ){
+      # set the array accordingly
       os[1] = only
     }
+
   } 
 
 } 
 
 {
 
+  # reset the output field separator
   sep = OFS;
-  # o-spec
+
   oslen = length(os);
-  # printf("oslen: %d\n", oslen);
+
+  #if we have an only-spec
   if ( oslen > 0 ){
 
-   for ( i=1; i<=oslen; i++ ){
-    
-     # calculate min/max from spec element
-     n = os[i]; 
+    # for each element
+    for ( i=1; i<=oslen; i++ ){
 
-     if ( n ~ /^[0-9]+$/ ){ 
-       n=strtonum(n)
-       s=n; e=n; 
-        # printf("i:= s:%s,e:%s\n", s, e );
-     }
+      # get element    
+      n = os[i]; 
 
-     if ( n ~ /-/ ){
+      # proced to calculate min/max fields this element represents
 
-       # extract int values from o-spec
-       split( n, o, "-" );  
+      # if n is an integer
+      if ( n ~ /^[0-9]+$/ ){ 
+        n=strtonum(n)
+        s=n; e=n; 
+      }
+
+      #or if n matches a "-" 
+      if ( n ~ /-/ ){
+
+        # extract int values from this element
+        split( n, o, "-" );  
      
-       # could perhaps merge the regex... 
-       if ( n ~ /^-[0-9]+$/       ){ s=1; e=strtonum(o[2]); }
-       if ( n ~ /^[0-9]+-$/       ){ s=strtonum(o[1]); e=NF;   }
-       if ( n ~ /^[0-9]+-[0-9]+$/ ){ s=strtonum(o[1]); e=strtonum(o[2]); }
+        # could perhaps merge the regexes and use above... 
+        if ( n ~ /^-[0-9]+$/       ){ s=1; e=strtonum(o[2]); }
+        if ( n ~ /^[0-9]+-$/       ){ s=strtonum(o[1]); e=NF;   }
+        if ( n ~ /^[0-9]+-[0-9]+$/ ){ s=strtonum(o[1]); e=strtonum(o[2]); }
 
-     }
+      }
 
-     # printf("s:%s,e:%s\n", s, e);
+      # singular integer 
+      if ( s == e ){
 
-     # bounds check per section
-     # question? do we silently set min(e,NF)?
-          
-          
-        # printf("s:%s,e:%s\n", s, e );
+        # in valid range
+        if ( s > 0 || s <= NF ){ 
 
-        if ( s == e ){
-
-            if ( s > 0 || s <= NF ){ 
-              if( i == oslen ){ sep = "\n"; }
-              printf("%s%s", $s, sep );
-            }
-            
-        }else{
-
-          if( s <= e ){
-             
-              # silently limit upper bound to NF
-              e=( e > NF ? NF : e );
-
-              for( j=s; j<e; j++ ){
-                printf("%s%s", $j, sep );            
-              }
-
-              if ( i == oslen ){ sep = "\n"; }
-              printf("%s%s", $e, sep);
-
-            }else{ 
-
-                
-                # printf("s:%s,e:%s\n", s, e);
-                s=( s > NF ? NF : s )
-                e=( e == 0 ? 1 : e )
-                for( j=s; j>e; j-- ){
-                  printf("%s%s", $j, sep );           
-                }
-
-                if( i == oslen ){ sep = "\n"; }
-                printf("%s%s", $e, sep);
-
-            }
+          # newline if last o-spec element
+          if( i == oslen ){ 
+            sep = "\n"; 
           }
-          # printf("s:%s,e:%s\n", s, e );
 
+          # output field + separator
+          printf("%s%s", $s, sep );
+        }
+            
+      }else{
+
+        # incremental range
+        if( s <= e ){
+             
+          # silently limit upper bound to NF
+          e=( e > NF ? NF : e );
+
+          # for each o-spec element
+          for( j=s; j<e; j++ ){
+            printf("%s%s", $j, sep );            
+          }
+
+          # newline if last o-spec element
+          if ( i == oslen ){ 
+            sep = "\n"; 
+          }
+
+          # output field + separator
+          printf("%s%s", $e, sep);
+
+        }else{ 
+          
+          # silently limit bounds      
+          s=( s > NF ? NF : s )
+          e=( e < 1  ?  1 : e )
+
+          # for each o-spec element
+          for( j=s; j>e; j-- ){
+            printf("%s%s", $j, sep );           
+          }
+
+          # newline if last o-spec element
+          if( i == oslen ){ 
+            sep = "\n"; 
+          }
+
+          # output field + separator
+          printf("%s%s", $e, sep);
+
+        }
+      }
+    }
+
+  }else{
+
+
+    # this works but could be tidied
+    # from min to max, print all fields
+    # check sensible bounds 
+    s=MINF < 1 ? 1 : MINF
+    e=MAXF; 
+
+  
+    if ( e < 1 || e >= NF ){ e=NF; };
+
+    for( i=s; i<=e; i++ ){
+    if( i >= MINF ){
+      if( i < e ){
+        printf("%s%s", $i, sep);
+      }else {
+        printf("%s\n", $i )
+      }
+    }
   }
-
-}else{
-
-   # from min to max, print all fields
-   # check sensible bounds 
-   s=MINF < 1 ? 1 : MINF
-
-   e=MAXF; 
-   if ( e < 1 || e >= NF ){ e=NF; };
-
-   for( i=s; i<=e; i++ ){
-     if( i >= MINF ){
-       if( i < e ){
-         printf("%s%s", $i, sep);
-       }else {
-         printf("%s\n", $i )
-       }
-     }
-   }
  } 
 
 }
