@@ -7,6 +7,17 @@
 
 U=1 #user-write-only sensible
 
+usage="
+
+  Usage: $( basename ${0} ) [-U] [paths...]
+
+  Remove world-writable permissions from paths.
+  Paths can be specified as arguments or passed in via stdin.
+
+  It does not recurse; though it will discriminate sticky-bits and symlinks.
+
+"
+
 # expect piped input from stdin or a specified file
 if [[ ! -p /dev/stdin && $# -eq 0 ]]
 then
@@ -19,10 +30,10 @@ then
 fi
 
 OPTIND=
-while getopts 'U' flag
+while getopts 'Uh' flag
 do
  case "${flag}" in
-  U) U=0;;
+  h) echo "${usage}"; exit 0;;
  esac
  shift $(( ${OPTIND} - 1 ))
  OPTIND=
@@ -34,33 +45,12 @@ IFS=$'\n'
 while read -r path
 do
 
-  # if user-write-only 
-  if [[ ${U} -eq 0 ]]
-  then 
-
-    # sensible file perm
-    if [[ -f "${path}" ]]
-    then
-      chmod -c 0644 "${path}"
-    fi
-
-    # sensible dir perm
-    if [[ -d "${path}" ]]
-    then
-      chmod -c 0755 "${path}"
-    fi
-
-  else
-
     # just remove world-writable permission
-    if [[ -e "${path}" ]]
+    # if path exists and is not a symlink or has the sticky bit set
+    if [[ -e "${path}" && ( ! -L "${path}" && -k "${path}" ]]
     then
       chmod -c o-w ${path}
     fi
-
-  fi
-
-
 
 done <<<"${*:-$(</dev/stdin)}"
 IFS=' \t\n'
