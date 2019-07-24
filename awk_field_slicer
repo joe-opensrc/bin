@@ -115,7 +115,7 @@ BEGIN {
 
 {
 
-  TODO: merge cases / re-normalise
+  #TODO: merge cases / re-normalise
 
   # reset the output field separator
   sep = OFS;
