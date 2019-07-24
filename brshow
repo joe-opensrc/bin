@@ -1,0 +1,86 @@
+#!/bin/bash 
+
+CNAME="$( basename $0 )"
+
+usg="
+Usage: ${CNAME} [-b <bridge_name>] [-E] [-h] [-l] [-i]
+
+ -b <bridge_name> := specify bridge name
+ -E               := show examples
+ -h               := this help message ;)
+ -l               := list bridge names
+ -i               := list only the interface names
+
+  Without arguments, list bridges and their interfaces.
+  Arguments '-b' and '-i' can be combined.
+
+  See EXAMPLES with '-E'.
+
+"
+
+exmpls="
+  EXAMPLES:
+  
+    shell> ${CNAME}
+    bridge0 veth53bd3ef
+    bridge1 vetha5538eb
+
+    shell> ${CNAME} -l
+    bridge0
+    bridge1
+
+    shell> ${CNAME} -i
+    veth53bd3ef
+    vetha5538eb
+
+    shell> ${CNAME} -b bridge0 -i
+    veth53bd3ef
+
+"
+
+OPTIND=
+PROCPATH="/sys/devices/virtual/net"
+
+bpath="${PROCPATH}"
+bname=""
+try_bname=1
+list=1
+list_interfaces_only=1;
+list_bridges_only=1;
+sedout=""
+
+while getopts 'Eb:hil' flag
+do
+  case "${flag}" in
+    'E') echo -ne "${exmpls}"; exit 0;;
+    'b') try_bname=0; bname="${OPTARG}";;
+    'h') echo -ne "${usg}"; exit 0;;
+    'i') list_interfaces_only=0;;
+    'l') list_bridges_only=0;;
+    \?) echo -ne "${usg}"; exit 1;;
+  esac
+done
+
+# let the user supply a bridge name; auto-completion is available
+if [[ ${try_bname} -eq 0 && ! -d "${bpath}/${bname}/brif" ]]
+then
+  echo -ne "\nCouldn't Find Bridge \"${bname}\".\n\nTry 'brshow -l'\n\n"
+  exit 1
+fi
+
+# script reads nicer with this here; although logically...
+if [[ ${list_interfaces_only} -eq 0 ]]
+then
+  cf="8"
+else
+  cf="6,8"
+fi
+
+# do the stuff 
+if [[ ${list_bridges_only} -eq 0 ]]
+then
+  find "${bpath}" -maxdepth 2 -type d -name 'brif' | cut -d'/' -f 6
+else
+  find "${bpath}" -maxdepth 3 -path "${bpath}/*/brif/*" | cut -d'/' --output-delimiter=' ' -f"${cf}"
+fi
+
