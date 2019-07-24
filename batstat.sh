@@ -1,5 +1,7 @@
 #!/bin/bash 
 
+# get battery statistics from /sys/class/power_supply/BAT0/uevent
+
 float=1     # default return rounded integer output
 out=""      #
 precision=2 #
