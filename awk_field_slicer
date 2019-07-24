@@ -109,6 +109,8 @@ BEGIN {
 
   } 
 
+  sep=OFS
+
 } 
 
 {
@@ -209,26 +211,30 @@ BEGIN {
 
   }else{
 
+    # TODO: allow negative range; rename min/max -> start/end
 
-    # this works but could be tidied
     # from min to max, print all fields
-    # check sensible bounds 
-    s=MINF < 1 ? 1 : MINF
-    e=MAXF; 
+    # silently limit to sensible bounds 
+    s=( MINF < 1 ? 1 : MINF );
+    e=( MAXF < 1 || MAXF > NF ? NF : MAXF );
 
-  
-    if ( e < 1 || e >= NF ){ e=NF; };
+    # sensible bounds
+    if ( ( s > 0 && s <= NF ) && ( e > 0 || e <= NF ) && (s <= e) ) { 
 
-    for( i=s; i<=e; i++ ){
-    if( i >= MINF ){
-      if( i < e ){
+      # for each element
+      for( i=s; i<e; i++ ){
+        
+        # output field + separator
         printf("%s%s", $i, sep);
-      }else {
-        printf("%s\n", $i )
+
       }
+
+      # newline when last element
+      printf("%s\n", $i )
+
     }
-  }
- } 
+
+  } 
 
 }
 
