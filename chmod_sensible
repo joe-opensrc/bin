@@ -2,11 +2,6 @@
 
 # at least remove world writable permissions
 
-# user can specify user-writable permission (i.e., 0755, 0644 )
-# TODO: allow user to specify mode to use
-
-U=1 #user-write-only sensible
-
 usage="
 
   Usage: $( basename ${0} ) [-U] [paths...]
