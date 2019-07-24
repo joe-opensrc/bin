@@ -42,7 +42,7 @@ do
 
     # just remove world-writable permission
     # if path exists and is not a symlink or has the sticky bit set
-    if [[ -e "${path}" && ( ! -L "${path}" && -k "${path}" ]]
+    if [[ -e "${path}" &&  ! ( -L "${path}" || -k "${path}" ) ]]
     then
       chmod -c o-w ${path}
     fi
