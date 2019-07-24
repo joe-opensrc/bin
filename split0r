@@ -1,0 +1,115 @@
+#!/bin/bash
+
+# quick & dirty script to split0r files
+# into sub folders with size limit
+# doesn't recurse and only cp's files.
+# it also skips files it cannot fit into the size limit with a warning 
+
+limit=
+olimit=
+odir="./out"
+v=
+x=
+OPTIND=
+while getopts 'l:o:' flag
+do
+ case "${flag}" in
+  l) limit="${OPTARG}";;
+  o)  odir="${OPTARG}";;
+ esac
+shift $(( OPTIND - 1 ))
+OPTIND=
+done
+
+
+if [[ $# -eq 0 ]]
+then
+ echo "Need File List."
+ exit 1
+fi
+
+limit="${limit:-25MB}" # size limit of sub-folder
+olimit=${limit}        # original-limit -- used in a msg later
+
+# parse limit; and convert to bytes
+limit="$( echo "${limit}" | sed -r -e 's/^[0-9]+$/\0/g' -e 's/((([0-9]+(\.[0-9]+)*)([kK]|[mM]|[gG]|KB|MB|GB)))$/\3|\5/g' )"
+
+if [[ "x${limit}" == "x" ]]
+then
+
+ echo -ne '\nLimit arg needs to be a size. e.g., 24M, 1024k, 1048576\n'
+ exit 1
+
+else
+
+  v=$( echo "${limit}" | cut -d'|' -f 1 )
+  x=$( echo "${limit}" | cut -d'|' -f 2 )
+
+fi
+
+# going to assume powers of 2
+case "${x}" in
+ k|K|KB) limit=$(( ${v} * 1024       ));;
+ m|M|MB) limit=$(( ${v} * 1048576    ));;
+ g|G|GB) limit=$(( ${v} * 1073741824 ));;
+      *) limit=${v};; 
+esac
+
+sum=0 # accumulator
+odn=0 # output directory number
+
+IFS=$'\n'
+while read file
+do
+  
+  # size
+  s=$( echo "${file}" | cut -d'|' -f 1 )
+
+  # name
+  n=$( echo "${file}" | cut -d'|' -f 2 )
+
+  # basename
+  bn="$( basename ${n} )"
+ 
+  # check were looking at a file 
+  if [[ ! -f "${n}" ]]
+  then
+    echo -ne "Not a file ${n}\n"
+    break
+  else
+
+    # if the current size + accumulated amount is >= the limit
+    if [[ $(( ${sum} + ${s} )) -ge ${limit} ]]
+    then
+
+      # if the file is outright too big for the limit
+      if [[ ${s} -ge ${limit} ]]
+      then
+
+        echo "${n} is too big for limit ${olimit} ...Skipping."
+        break
+
+      else
+
+        # start a new directory
+        odn=$(( odn + 1 ))
+        sum=${s}
+
+      fi 
+    else
+      # add this file into the folder
+      sum=$(( sum + ${s} ))
+    fi
+
+    # create the directory and copy in the contents
+    mkdir -p "${odir}_${odn}"
+    cp "${n}" "${odir}_${odn}/${bn}"
+
+  fi
+
+# each file from arg list
+done <<<"$( stat -c '%s|%n' "${@}" )"
+IFS=$' \t\n'
+
+# tree as a way of varifing the contents -- optional; can be removed ;) 
+tree -C -L 2 ${odir}_* | grep -v "\[error opening dir\]"
