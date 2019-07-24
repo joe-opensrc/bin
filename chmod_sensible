@@ -1,0 +1,66 @@
+#!/bin/bash 
+
+# at least remove world writable permissions
+
+# user can specify user-writable permission (i.e., 0755, 0644 )
+# TODO: allow user to specify mode to use
+
+U=1 #user-write-only sensible
+
+# expect piped input from stdin or a specified file
+if [[ ! -p /dev/stdin && $# -eq 0 ]]
+then
+
+  cmd_name="$( basename ${0} )"
+
+  echo -ne "\nEgg: We found no input!\n\nTry:\n shell> ${cmd_name} <path>\nor\n shell> echo \"file list\" | ${cmd_name}\n\n" >&2
+  exit 1
+
+fi
+
+OPTIND=
+while getopts 'U' flag
+do
+ case "${flag}" in
+  U) U=0;;
+ esac
+ shift $(( ${OPTIND} - 1 ))
+ OPTIND=
+done
+
+
+
+IFS=$'\n'
+while read -r path
+do
+
+  # if user-write-only 
+  if [[ ${U} -eq 0 ]]
+  then 
+
+    # sensible file perm
+    if [[ -f "${path}" ]]
+    then
+      chmod -c 0644 "${path}"
+    fi
+
+    # sensible dir perm
+    if [[ -d "${path}" ]]
+    then
+      chmod -c 0755 "${path}"
+    fi
+
+  else
+
+    # just remove world-writable permission
+    if [[ -e "${path}" ]]
+    then
+      chmod -c o-w ${path}
+    fi
+
+  fi
+
+
+
+done <<<"${*:-$(</dev/stdin)}"
+IFS=' \t\n'
