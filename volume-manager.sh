@@ -8,8 +8,21 @@ T=1 # toggle
 
 if [[ $# -eq 0 ]]
 then
-  echo -ne "\nUsage: $(basename ${0}) -d <pct> | -i <pct> | -m | -T\n\n"
+
+cat <<-EOU
+
+  Usage: $(basename ${0}) ( -T | -d | -i | -m ) [ -t <sec> ]
+  
+  -T := toggle muted state
+  -d := decrement volume 10%
+  -i := increment volume 10%
+  -m := mute sound
+  -t := set notify-send expire-time, in seconds (default: ${t})
+
+EOU
+  
   exit 0
+
 fi
 
 OPTIND=
