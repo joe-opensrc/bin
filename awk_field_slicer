@@ -67,8 +67,6 @@ then
   exit 1
 fi
 
-# if not specified, set OFS to FS
-ofs="${ofs:--v OFS=${FS}}"
 
 ## max = min + len 
 if [[ ${max} -le 0 && ${len} -ne -1 ]]
@@ -109,7 +107,11 @@ BEGIN {
 
   } 
 
-  sep=OFS
+  if ( OFS == "" ){
+    sep=" ";
+  }else{
+    sep=OFS
+  }
 
 } 
 
