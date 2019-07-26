@@ -5,7 +5,9 @@
 
 # example: sudo iptables-save | iptsfilter -D
 
-acmd=~/bin/iptsfilter.awk
+# expensive on the number of subshells, but useful for portability ;)
+root="$( dirname $( realpath ${0} ) )"
+acmd=${root}/iptsfilter.awk
 
 del=1
 while getopts 'D' flag
