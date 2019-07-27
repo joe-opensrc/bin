@@ -24,28 +24,74 @@ then
 
 fi
 
+
+user_write_only=1
+intru=1
+
 OPTIND=
-while getopts 'Uh' flag
+while getopts 'IUh' flag
 do
  case "${flag}" in
   h) echo "${usage}"; exit 0;;
+  I) intru=0;;
+  U) user_write_only=0;;
  esac
  shift $(( ${OPTIND} - 1 ))
  OPTIND=
 done
 
+# is intrusive mode enabled?
+if [[ ${intru} -eq 0 ]]
+then
+
+  ans=
+  if [[ -p /dev/stdin ]]
+  then
+
+    #can't count the stream without reading it; so just ask for confirmation
+    read -p "Intrusive mode enabled. Proceed [y/N] ? " ans </dev/tty
+
+  else
+
+    if [[ ${#} -gt 3 ]]
+    then
+
+      #count the number of args; like 'rm -I'
+      read -p "Would you like to change fs permissions for ${#} paths [y/N]? " ans
+
+    else
 
 
 IFS=$'\n'
 while read -r path
 do
 
-    # just remove world-writable permission
-    # if path exists and is not a symlink or has the sticky bit set
-    if [[ -e "${path}" &&  ! ( -L "${path}" || -k "${path}" ) ]]
+  # if path exists and is not a symlink or has the sticky bit set
+  if [[ -e "${path}" &&  ! ( -L "${path}" || -k "${path}" ) ]]
+  then
+
+    # set user only write permissions for files/dirs
+    if [[ ${user_write_only} -eq 0 ]]
     then
-      chmod -c o-w ${path}
+
+      if [[ -f "${path}" ]]
+      then
+        chmod -c 0644 "${path}"
+      elif [[ -d "${path}" ]]
+      then
+        chmod -c 0750 "${path}"
+      else
+        # not a regular file or directory; just strip world-writable
+        chmod -c o-w "${path}"
+      fi
+
+    else
+
+      # just remove world-writable permission
+      chmod -c o-w "${path}"
     fi
+
+  fi
 
 done <<<"${*:-$(</dev/stdin)}"
 IFS=' \t\n'
