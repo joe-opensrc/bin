@@ -61,6 +61,18 @@ then
 
     else
 
+      # otherwise don't ask for confirmation
+      ans='Y'
+
+    fi
+  fi
+
+  
+  case "${ans}" in
+    Y|y)  ;; #noop
+      *) echo -ne '...Aborted.\n\n'; exit 0;;
+  esac
+fi
 
 IFS=$'\n'
 while read -r path
