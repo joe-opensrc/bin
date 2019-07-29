@@ -48,11 +48,14 @@ then
   if [[ -p /dev/stdin ]]
   then
 
-    #can't count the stream without reading it; so just ask for confirmation
+    # can't count the stream without reading it. 
+    # We could do 'c=$( </dev/stdin )'; but it might be ill-advised,
+    # that is 'rm -I' doesn't do it, so we'll just ask for confirmation here...
     read -p "Intrusive mode enabled. Proceed [y/N] ? " ans </dev/tty
 
   else
 
+    # if args are passed in and there number is >3
     if [[ ${#} -gt 3 ]]
     then
 
