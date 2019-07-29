@@ -55,7 +55,7 @@ then
 
   else
 
-    # if args are passed in and there number is >3
+    # if args are passed in and their number is >3
     if [[ ${#} -gt 3 ]]
     then
 
