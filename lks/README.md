@@ -31,3 +31,8 @@ Typical Usage:
   shell> lks -e wiki interesting 
   shell> lks -b elinks -e wiki something else intersting
 ```
+
+
+caveats:
+  - many ;)
+  - suffers from /path/to/app/app-itis
