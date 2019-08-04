@@ -20,10 +20,10 @@ Make sure the folder is added to your PATH.
 
 Typical Usage:
 
-###### Google is default:
+###### Google and w3m are defaults:
 ```bash 
   shell> lks some search terms
-  shell> lks -a -e google some search terms # wraps each search term in double-quotes
+  shell> lks -b w3m -e google -a some search terms # wraps each search term in double-quotes
 ```
 
 ###### wiki search:
