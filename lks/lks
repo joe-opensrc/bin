@@ -26,10 +26,12 @@ browser=${browser:-w3m}
 engine="google"
 proxy=
 dryrun=""
+url=1
 terms=
-while getopts 'ab:e:nop:' opt
+while getopts 'Uab:e:nop:' opt
 do
   case "${opt}" in
+    U) url=0;;
     a) all=0;;
     b) browser=${OPTARG};;
     e) engine="${OPTARG}";;
@@ -60,17 +62,28 @@ case "${browser}" in
   *) echo -ne "\nBrowser ${browser}, Not Found!\n\n";;
 esac
 
-# search terms are the remaining arguments
-terms="${@}"
-# default is: google
-efile="${EDIR}/${engine}"
 
-# source file to override engine specific variables
-# i.e.,  url, browser, terms.
-if [[ -f "${efile}" && -r "${efile}" ]]
+# if we're in browsing mode
+if [[ ${url} -eq 0 ]]
 then
- source "${efile}"
+
+  url="${1}"
+  
+else
+
+  # search terms are the remaining arguments
+  terms="${@}"
+  # default is: google
+  efile="${EDIR}/${engine}"
+
+  # source file to override engine specific variables
+  # i.e.,  url, browser, terms.
+  if [[ -f "${efile}" && -r "${efile}" ]]
+  then
+   source "${efile}"
+  fi
+
 fi
 
 # execute command
-${dryrun} ${proxy} ${browser} ${psthru} "${url}${terms[@]}" 
+${dryrun} ${proxy} ${browser} ${psthru} ${url}${terms[@]}
