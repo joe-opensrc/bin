@@ -32,6 +32,13 @@ Typical Usage:
   shell> lks -b elinks -e wiki something else intersting
 ```
 
+###### '-U' flag
+This flag disables search and simply passes the first non-flag argument to the browser
+or if no arguments are supplied, and you're using w3m (the default), it'll open the bookmarks page. 
+```bash
+  shell> lks -U 
+  shell> lks -b elinks -U https://example.com
+```
 
 caveats:
   - many ;)
