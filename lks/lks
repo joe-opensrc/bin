@@ -9,9 +9,21 @@
 ROOT="$( realpath $( dirname ${0} ) )"
 EDIR="${ROOT}/engines.d"
 
-usg="\nUsage: lks [-b <w3m|links2|elinks>] [-e <wiki|wikifull|nethack|google|imdb|duck|pbay|urban|wikt|guten|scala|rarbg>] term1 [ term2 ...]\n\n"
+usg="
+  Usage: lks [-U] [-b <w3m|links2|elinks>] [-e <engine>] term1 [ term2 ...]
 
-if [[ $# -eq 0 ]]
+    -U  :=  URL-mode; don't search, pass <term1> to the browser unmodified.
+    -a  :=  wrap search terms with double-quotes '\"'; (used by google engine).
+    -b  :=  specify which browser to use.
+    -e  :=  specify which search engine to use.
+    -h  :=  this help message ;)
+    -n  :=  dry-run; echo out the generated command.
+    -p  :=  pass through options; pass flags to browser
+    -o  :=  specify PROXY settings
+
+"
+
+if [[ $# -eq 0 || ( $# -eq 1 && "${1}" == "--help" ) ]]
 then
   echo -ne "${usg}"
   exit 0
@@ -28,13 +40,14 @@ proxy=
 dryrun=""
 url=1
 terms=
-while getopts 'Uab:e:nop:' opt
+while getopts 'Uab:e:hnop:' opt
 do
   case "${opt}" in
     U) url=0;;
     a) all=0;;
     b) browser=${OPTARG};;
     e) engine="${OPTARG}";;
+    h) echo -ne "${usg}"; exit 0;;
     n) dryrun="echo";;
     p) psthru="${OPTARG}";;
     o) proxy="/usr/bin/env HTTP_PROXY=http://${PROXY_IP}:3128 HTTPS_PROXY=https://${PROXY_IP}:3128";;
