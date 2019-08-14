@@ -38,12 +38,12 @@ browser=${browser:-w3m}
 engine="google"
 proxy=
 dryrun=""
-url=1
+urlmode=1
 terms=
 while getopts 'Uab:e:hnop:' opt
 do
   case "${opt}" in
-    U) url=0;;
+    U) urlmode=0;;
     a) all=0;;
     b) browser=${OPTARG};;
     e) engine="${OPTARG}";;
@@ -77,10 +77,10 @@ esac
 
 
 # if we're in browsing mode
-if [[ ${url} -eq 0 ]]
+if [[ ${urlmode} -eq 0 ]]
 then
 
-  url="${1}"
+  url="${@}"
   
 else
 
@@ -94,6 +94,9 @@ else
   if [[ -f "${efile}" && -r "${efile}" ]]
   then
    source "${efile}"
+  else
+    echo -ne "\n  Cannot find engine: ${engine}\n  Look in ${EDIR} or perhaps try autocompletion?\n\n"
+    exit 2
   fi
 
 fi
