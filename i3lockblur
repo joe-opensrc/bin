@@ -1,0 +1,31 @@
+#!/bin/bash 
+
+# function to remove temp files
+function clnup(){
+  [[ -f "${ifile}" ]]    && rm "${ifile}"
+  [[ -f "${ifileblr}" ]] && rm "${ifileblr}"
+}
+
+# run clnup if we receive any of the following signals
+trap clnup HUP INT TERM KILL
+
+# define / create tempfile
+ifile="$(mktemp).png"
+ifileblr="${ifile}.blurred"
+
+# screengrab
+scrot "${ifile}"
+
+# apply gaussian filter to the screen grab and save in temp file
+convert -filter Gaussian \
+        -define filter:sigma=9 \
+        -resize 1920x1080 -extent 1920x1080 \
+        -gravity center \
+        -background black \
+        "${ifile}" "${ifileblr}"
+
+# run i3lock with the blurred image
+i3lock -i "${ifileblr}" -e -c 000000 
+
+# having returned from i3lock, run cleanup
+clnup
