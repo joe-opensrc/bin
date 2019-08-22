@@ -16,10 +16,13 @@ ifileblr="${ifile}.blurred"
 # screengrab
 scrot -zq 50 "${ifile}"
 
+# get current screen resolution
+geom=$( xrandr --current | sed -ne '1s/.*current \([0-9]\+\) x \([0-9]\+\).*/\1x\2/ p' )
+
 # apply gaussian filter to the screen grab and save in temp file
 convert -filter Gaussian \
         -define filter:sigma=9 \
-        -resize 1920x1080 -extent 1920x1080 \
+        -resize "${geom}" -extent "${geom}" \
         -gravity center \
         -background black \
         "${ifile}" "${ifileblr}"
