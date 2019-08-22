@@ -1,0 +1,69 @@
+#!/bin/bash 
+
+min=1
+max=-1
+len=-1
+AIFS=" "
+AOFS="|"
+only=-1
+pivot=1
+
+OPTIND=
+while getopts 'F:O:m:M:p:o:l:' flag
+do
+
+ case "${flag}" in
+  F) AIFS="${OPTARG}";;
+  O) AOFS="${OPTARG}";;
+  l) len=${OPTARG};;
+  m) min=${OPTARG};;
+  M) max=${OPTARG};;
+  o) only=${OPTARG};;
+  p) pivot="${OPTARG}";;
+ esac
+
+ shift $(( OPTIND - 1 ))
+ OPTIND=
+
+done
+
+if [[ ${max} -le 0 && ${len} -ne -1 ]]
+then
+ max=$(( ${min} + ${len} - 1 ))
+fi
+
+if [[ ${only} -gt 0 ]]
+then
+ min=${only}
+ max=${only}
+fi
+
+#if (val in array)
+awk -v FS="${AIFS}" -v OFS="${AOFS}" -v "MINF=${min}" -v "MAXF=${max}" -v pivot=${pivot} '
+
+BEGIN{ PROCINFO["sorted_in"] = "@ind_str_asc"; }
+
+{ 
+
+ maxf=MAXF; 
+ cp=$pivot; #get pivot
+
+ line="" # reset line
+ 
+ if ( maxf < 1 || maxf >= NF ){ maxf=NF; }; #limit to length of line
+
+ # recompose between range - 1
+ for ( i=MINF; i < maxf; i++ ){ 
+  line=sprintf("%s%s", $i, FS ) 
+ };
+ 
+ # add last one [avoids trims, etc]
+ line=sprintf("%s%s", line, $maxf);
+
+ merged[cp]=sprintf("%s%s%s", merged[cp], OFS, line);
+
+} 
+
+END{ for ( m in merged ){ printf("%s|%s\n", m, substr(merged[m],2) ); fflush(); } }' "${@}"
+
+
