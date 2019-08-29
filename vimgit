@@ -35,6 +35,7 @@ fi
 
 
 IFS=$'\n' 
+
   # good god look at this hidesousness!! ;)
   fs=( $( 
           
