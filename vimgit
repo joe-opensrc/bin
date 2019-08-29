@@ -1,0 +1,57 @@
+#!/bin/bash 
+
+### Edit git-tracked files in vim; use fzf to select from list
+### ( fyi: looks nice with less set to use syntax-highlighting ;) )
+
+## Fzf shortcuts:    
+##  Alt+x     := select-all
+##  Alt+space := toggle-all
+##  Alt+j     := page down (in preview window)
+##  Alt+k     := page up   ( ditto )
+
+### TODO: translate 'usage' from Developer into English ;)
+
+usage="
+
+  Script to select & edit files currently being tracked by git (in current dir)
+  and which are modified already in some way.
+
+  Usage: $( basename ${0} ) [-h|--help] [-p]
+    [-p]          := Show diff patch in preview window (defaults to 'less').
+    [-h| --help]  := Show this help message ;).
+"
+
+
+prev_cmd="less"
+if [[ ${#} -eq 1 ]]
+then
+
+  case "${1}" in
+    -p) prev_cmd="git diff --color";;
+    -h|--help) echo "${usage}"; exit 0;;
+  esac 
+
+fi
+
+
+IFS=$'\n' 
+  # good god look at this hidesousness!! ;)
+  fs=( $( 
+          
+          git status --porcelain          | \
+           grep --color=never -v "^??"     | \
+           awk_field_slicer -m 2          | \
+           sed -r -e 's/^"//' -e 's/"$//' | \
+           fzf -0 --multi --reverse \
+            --ansi \
+            --header='Git Modified Files' \
+            --bind='alt-space:toggle-all,alt-x:select-all,alt-j:preview-page-down,alt-k:preview-page-up' \
+            --preview="${prev_cmd} {}" \
+            --preview-window='right:75%:wrap' 
+
+        ) 
+     )
+
+IFS=$' \t\n'
+
+[[ ${#fs[@]} -gt 0 ]] && vim "${fs[@]}" || echo -ne '\nNo Files Selected.\n\n'
