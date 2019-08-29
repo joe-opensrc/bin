@@ -1,5 +1,14 @@
 #!/bin/bash 
 
+nofork=
+if [[ ${#} -eq 1 ]] 
+then
+  case "${1}" in
+    '-n') nofork="-n";;
+    '-h'|'--help') echo -ne "\n $(basename ${0}) [-h|--help] [-n]\n\n"; exit 0;;
+  esac
+fi
+
 # function to remove temp files
 function clnup(){
   [[ -f "${ifile}" ]]    && rm "${ifile}"
@@ -28,7 +37,7 @@ convert -filter Gaussian \
         "${ifile}" "${ifileblr}"
 
 # run i3lock with the blurred image
-i3lock -i "${ifileblr}" -e -c 000000 
+i3lock ${nofork} -i "${ifileblr}" -e -c 000000 
 
 # having returned from i3lock, run cleanup
 clnup
