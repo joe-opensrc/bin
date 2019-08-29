@@ -54,4 +54,4 @@ IFS=$'\n'
 
 IFS=$' \t\n'
 
-[[ ${#fs[@]} -gt 0 ]] && vim "${fs[@]}" || echo -ne '\nNo Files Selected.\n\n'
+[[ ${#fs[@]} -gt 0 ]] && vim "${fs[@]}" || echo -ne '\nNo Files Selected / To Edit.\n\n'
