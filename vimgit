@@ -22,12 +22,12 @@ usage="
 "
 
 
-prev_cmd="less"
+prev_cmd="less {}"
 if [[ ${#} -eq 1 ]]
 then
 
   case "${1}" in
-    -p) prev_cmd="git diff --color";;
+    -p) prev_cmd="git diff --color {}";;
     -h|--help) echo "${usage}"; exit 0;;
   esac 
 
@@ -46,7 +46,7 @@ IFS=$'\n'
             --ansi \
             --header='Git Modified Files' \
             --bind='alt-space:toggle-all,alt-x:select-all,alt-j:preview-page-down,alt-k:preview-page-up' \
-            --preview="${prev_cmd} {}" \
+            --preview="${prev_cmd}" \
             --preview-window='right:75%:wrap' 
 
         ) 
