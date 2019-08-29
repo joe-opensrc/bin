@@ -4,16 +4,19 @@ d=1 # decr
 i=1 # incr
 m=1 # mute
 t=3 # msg delay
+M=1 # unmute
 T=1 # toggle
+
 
 if [[ $# -eq 0 ]]
 then
 
 cat <<-EOU
 
-  Usage: $(basename ${0}) ( -T | -d | -i | -m ) [ -t <sec> ]
+  Usage: $(basename ${0}) ( -T | -M | -d | -i | -m ) [ -t <sec> ]
   
   -T := toggle muted state
+  -M := unmute sound
   -d := decrement volume 10%
   -i := increment volume 10%
   -m := mute sound
@@ -26,13 +29,14 @@ EOU
 fi
 
 OPTIND=
-while getopts 'dimt:T' flag
+while getopts 'dimt:MT' flag
 do
  case "${flag}" in
   d) d=0; msg="Vol -10%";;
   i) i=0; msg="Vol +10%";;
-  m) m=0; msg="Muted"; t=5;;
+  m) m=0; msg="Muted";   M=1; T=1; t=5;;
   t) t=${OPTARG};;
+  M) M=0; msg="Unmuted"; m=0; T=1; t=5;; 
   T) T=0; t=5;;
  esac
  shift $(( ${OPTIND} - 1 ))
@@ -51,6 +55,11 @@ fi
 if [[ ${T} -eq 0 ]]
 then
   pactl set-sink-mute 0 toggle
+fi
+
+if [[ ${M} -eq 0 ]]
+then
+  pactl set-sink-mute 0 0
 fi
 
 if [[ ${i} -eq 0 ]]
