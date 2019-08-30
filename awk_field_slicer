@@ -6,6 +6,7 @@
 
 # did I mention it's a bit like GNU-cut ;)
 
+
 min=1   # lowest record
 max=-1  # highest record
 len=-1  # used to calculate max=(min+len)
@@ -123,6 +124,8 @@ BEGIN {
   sep = OFS;
 
   oslen = length(os);
+  
+  nf=split( $0, field, FS, separator ); 
 
   #if we have an only-spec
   if ( oslen > 0 ){
@@ -163,10 +166,12 @@ BEGIN {
           # newline if last o-spec element
           if( i == oslen ){ 
             sep = "\n"; 
+          }else{
+            sep = separator[s];
           }
 
           # output field + separator
-          printf("%s%s", $s, sep );
+          printf("%s%s", field[s], sep );
         }
             
       }else{
@@ -179,16 +184,18 @@ BEGIN {
 
           # for each o-spec element
           for( j=s; j<e; j++ ){
-            printf("%s%s", $j, sep );            
+            printf("%s%s", field[j], separator[j] );            
           }
 
           # newline if last o-spec element
           if ( i == oslen ){ 
             sep = "\n"; 
+          }else{
+            sep = separator[e];
           }
 
           # output field + separator
-          printf("%s%s", $e, sep);
+          printf("%s%s", field[e], sep);
 
         }else{ 
           
@@ -198,16 +205,18 @@ BEGIN {
 
           # for each o-spec element
           for( j=s; j>e; j-- ){
-            printf("%s%s", $j, sep );           
+            printf("%s%s", field[j], separator[j] );           
           }
 
           # newline if last o-spec element
           if( i == oslen ){ 
             sep = "\n"; 
+          }else{
+            sep = separator[e];
           }
 
           # output field + separator
-          printf("%s%s", $e, sep);
+          printf("%s%s", field[e], sep);
 
         }
       }
@@ -229,12 +238,12 @@ BEGIN {
       for( i=s; i<e; i++ ){
         
         # output field + separator
-        printf("%s%s", $i, sep);
+        printf("%s%s", field[i], separator[i]);
 
       }
 
       # newline when last element
-      printf("%s\n", $i )
+      printf("%s\n", field[i] )
 
     }
 
