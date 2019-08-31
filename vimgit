@@ -16,18 +16,19 @@ usage="
   Script to select & edit files currently being tracked by git (in current dir)
   and which are modified already in some way.
 
-  Usage: $( basename ${0} ) [-h|--help] [-p]
-    [-p]          := Show diff patch in preview window (defaults to 'less').
+  Usage: $( basename ${0} ) [-h|--help] [-l] [-p]
+    [-l]          := 'less' file output into preview window
+    [-p]          := Show diff patch in preview window (default).
     [-h| --help]  := Show this help message ;).
 "
 
 
-prev_cmd="less {}"
+prev_cmd="git diff --color {}"
 if [[ ${#} -eq 1 ]]
 then
 
   case "${1}" in
-    -p) prev_cmd="git diff --color {}";;
+    -l) prev_cmd="less {}";;
     -h|--help) echo "${usage}"; exit 0;;
   esac 
 
