@@ -37,7 +37,7 @@ fi
 
 IFS=$'\n' 
 
-  # good god look at this hidesousness!! ;)
+  # good god look at this hideousness!! ;)
   fs=( $( 
           
           git status --porcelain          | \
