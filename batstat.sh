@@ -28,6 +28,7 @@ do
   \?) echo -ne "${USAGE}"; exit 1;;
  esac
  shift $(( OPTIND - 1 ))
+ OPTIND=
 done
 
 if [[ ! ${precision} =~ ^[0-9]+$ ]]
