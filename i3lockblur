@@ -1,13 +1,20 @@
 #!/bin/bash 
 
 nofork=
-if [[ ${#} -eq 1 ]] 
-then
-  case "${1}" in
-    '-n') nofork="-n";;
-    '-h'|'--help') echo -ne "\n $(basename ${0}) [-h|--help] [-n]\n\n"; exit 0;;
+noblur=1
+
+OPTIND=
+while getopts 'Chn' flag
+do
+  case "${flag}" in
+     C) noblur=0;;  # C-thru or Contradiction, i.e., run i3lockblur without blurring ;)
+    -n) nofork="-n";;
+    -h|--help) echo -ne "\n $(basename ${0}) [-h|--help] [-n]\n\n"; exit 0;;
   esac
-fi
+ shift $(( ${OPTIND} - 1 ))
+ OPTIND=
+done
+
 
 # function to remove temp files
 function clnup(){
@@ -20,23 +27,30 @@ trap clnup HUP INT TERM KILL
 
 # define / create tempfile
 ifile="$(mktemp).png"
-ifileblr="${ifile}.blurred"
+ifileblr=""
 
 # screengrab
 scrot -zq 50 "${ifile}"
 
-# get current screen resolution
-geom=$( xrandr --current | sed -ne '1s/.*current \([0-9]\+\) x \([0-9]\+\).*/\1x\2/ p' )
+if [[ ${noblur} -eq 0 ]]
+then
+  ifileblr="${ifile}"
+else
 
-# apply gaussian filter to the screen grab and save in temp file
-convert -filter Gaussian \
-        -define filter:sigma=9 \
-        -resize "${geom}" -extent "${geom}" \
-        -gravity center \
-        -background black \
-        "${ifile}" "${ifileblr}"
+  ifileblr="${ifile}.blurred"
+  # get current screen resolution
+  geom=$( xrandr --current | sed -ne '1s/.*current \([0-9]\+\) x \([0-9]\+\).*/\1x\2/ p' )
 
-# run i3lock with the blurred image
+  # apply gaussian filter to the screen grab and save in temp file
+  convert -filter Gaussian \
+          -define filter:sigma=9 \
+          -resize "${geom}" -extent "${geom}" \
+          -gravity center \
+          -background black \
+          "${ifile}" "${ifileblr}"
+fi
+
+# run i3lock with the (probably) blurred image
 i3lock ${nofork} -i "${ifileblr}" -e -c 000000 
 
 # having returned from i3lock, run cleanup
