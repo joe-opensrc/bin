@@ -28,18 +28,15 @@ trap clnup HUP INT TERM KILL
 # define / create tempfile
 ifile="$(mktemp).png"
 ifileblr="${ifile}.blurred"
-
+ifiledot=~/bin/i3dot.png
 # screengrab
 scrot -zq 50 "${ifile}"
 
 if [[ ${noblur} -eq 0 ]]
 then
-  convert -pointsize 37 \
-          -gravity Center \
-          -background black \
-          -fill white \
-          -annotate +0+2 'Magic Word?' \
-          "${ifile}" "${ifileblr}" 
+  convert "${ifile}" \( "${ifiledot}" -gravity Northwest -resize 42x42^ -geometry +20+20 \) -composite "${ifileblr}" 
+  # feh -Z --scale-down -B black ${ifileblr}
+  # exit 0
 else
 
   # get current screen resolution
