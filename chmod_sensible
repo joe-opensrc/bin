@@ -13,18 +13,6 @@ usage="
 
 "
 
-# expect piped input from stdin or a specified file
-if [[ ! -p /dev/stdin && $# -eq 0 ]]
-then
-
-  cmd_name="$( basename ${0} )"
-
-  echo -ne "\nEgg: We found no input!\n\nTry:\n shell> ${cmd_name} <path>\nor\n shell> echo \"file list\" | ${cmd_name}\n\n" >&2
-  exit 1
-
-fi
-
-
 user_write_only=1
 intru=1
 
@@ -39,6 +27,17 @@ do
  shift $(( ${OPTIND} - 1 ))
  OPTIND=
 done
+
+# expect piped input from stdin or a specified file
+if [[ ! -p /dev/stdin && $# -eq 0 ]]
+then
+
+  cmd_name="$( basename ${0} )"
+
+  echo -ne "\nEgg: We found no input!\n${usage}\n  Try:\n   shell> ${cmd_name} <path>\n  or\n   shell> echo \"file list\" | ${cmd_name}\n\n" >&2
+  exit 1
+
+fi
 
 # is intrusive mode enabled?
 if [[ ${intru} -eq 0 ]]
