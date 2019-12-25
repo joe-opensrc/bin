@@ -64,13 +64,34 @@ else
  fi
 fi
 
+pct_round=${BATSTAT_CAPACITY}
+
+glyph=""
+if [[ ${pct_round} -lt 12 ]]
+then
+  glyph=''
+elif [[ ${pct_round} -lt 43 ]]
+then
+  glyph=''
+elif [[ ${pct_round} -lt 65 ]]
+then
+  glyph=''
+elif [[ ${pct_round} -lt 85 ]]
+then
+  glyph=''
+else 
+  glyph=''
+fi
+
 # I '💜' Unicode
 case "${BATSTAT_STATUS}" in
   "Full")        out="❍ 100.00%";;
-  "Discharging") out="⭹ ${pct}%";;
-  "Charging")    out="⭷ ${pct}%";;
+  "Discharging") out="⭹ ${pct}% ${glyph}";;
+  "Charging")    out="⭷ ${pct}% ${glyph}";;
   "Unknown")     out="? ---.--%";;
 esac
+
+
 
 if [[ ${verbose} -eq 0 ]]
 then
