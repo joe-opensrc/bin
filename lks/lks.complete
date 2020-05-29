@@ -9,7 +9,9 @@ function _lks() {
 
   case "${prev}" in
     -b)
-      COMPREPLY+=( $( compgen -W 'w3m links2 elinks' -- "${cur}" ) )
+      browsers="w3m links2 elinks wget" 
+
+      COMPREPLY+=( $( compgen -W "${browsers}" -- "${cur}" ) )
       return 0;;
 
     -e)
