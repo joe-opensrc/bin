@@ -26,5 +26,7 @@ function _lks() {
 
 
 } &&
-complete -F _lks lks
+{ complete -F _lks lks; \
+  complete -F _lks lk;
+}
 
