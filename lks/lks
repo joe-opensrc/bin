@@ -61,18 +61,25 @@ done
 
 # choose a browser; defaults to: w3m
 case "${browser}" in
+
   l|links2) browser="/usr/bin/links2 -html-numbered-links 1";
             if [[ -n "${proxy}" ]]
             then
               browser="${browser} -http-proxy ${PROXY_IP}:3128 -https-proxy ${PROXY_IP}:3128"
             fi;;
+
   w|w3m)    browser="/usr/bin/w3m -o display_link_number=1";
             if [[ $# -eq 0 ]]
             then
               browser="${browser} -B"
             fi;;
+
   e|elinks) browser="/usr/bin/elinks";;
+
+  g|wget)   browser="/usr/bin/wget -q -O -";;
+
   *) echo -ne "\nBrowser ${browser}, Not Found!\n\n";;
+
 esac
 
 
