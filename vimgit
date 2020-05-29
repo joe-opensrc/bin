@@ -22,8 +22,8 @@ usage="
     [-h| --help]  := Show this help message ;).
 "
 
-
-prev_cmd="git diff --color {}"
+git_root="$(git rev-parse --show-toplevel)"
+prev_cmd="git diff --color -- ${git_root}/{}"
 if [[ ${#} -eq 1 ]]
 then
 
@@ -55,5 +55,5 @@ IFS=$'\n'
      )
 
 IFS=$' \t\n'
-
+fs=("${fs[@]/#/${git_root}/}")
 [[ ${#fs[@]} -gt 0 ]] && vim "${fs[@]}" || echo -ne '\nNo Files Selected / To Edit.\n\n'
