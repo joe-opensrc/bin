@@ -1,2 +1,0 @@
-url='https://www.rfc-editor.org/search/rfc_search_detail.php?pubstatus%5B%5D=Any&pub_date_type=any&title='
-terms="${terms// /+}"
