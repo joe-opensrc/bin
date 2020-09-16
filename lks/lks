@@ -40,9 +40,12 @@ proxy=
 dryrun=""
 urlmode=1
 terms=
-while getopts 'Uab:e:hnop:' opt
+torify=1
+
+while getopts 'TUab:e:hnop:' opt
 do
   case "${opt}" in
+    T) torify=0;;
     U) urlmode=0;;
     a) all=0;;
     b) browser=${OPTARG};;
@@ -82,6 +85,10 @@ case "${browser}" in
 
 esac
 
+if [[ ${torify} -eq 0 ]]
+then
+  browser="torify ${browser}"
+fi
 
 # if we're in browsing mode
 if [[ ${urlmode} -eq 0 ]]
