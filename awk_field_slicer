@@ -1,0 +1,256 @@
+#!/bin/bash
+
+# basically an awk version of 'GNU-cut'
+# but allows a multiple character field separator
+# and negative ranges
+
+# did I mention it's a bit like GNU-cut ;)
+
+
+min=1   # lowest record
+max=-1  # highest record
+len=-1  # used to calculate max=(min+len)
+FS=" "  # AWK FIELD SEPARATOR; SPACE.
+ofs=""  # AWK OUTPUT SEPARATOR
+only="" # return only the field specified (a bit like 'cut -f')
+
+cmd_name="$(basename ${0})"
+usage="
+
+  ${cmd_name} [-F <sep>] [-M <max>] [-O <sep>] [-l <len>] [-m <min>] [-o <only>] [file...]
+
+  -F <sep>  := field separator, FS (default: ' ')
+  -M <max>  := integer of highest field number (default: NF)
+  -O <sep>  := awk output field separator (defaults to FS)
+  -l <len>  := number of fields to return (can be used in conjunction with '-m')
+  -m <min>  := integer of lowest field number (default: 1)
+  -o <only> := string representation of field specifier (similar to GNU-cut)
+             \ takes the following form: (n|n-|n-m|-n|n-$)[,...]
+             \ see EXAMPLES below
+             
+"
+examples="      
+  EXAMPLES: 
+
+  The following are all equivalent:
+
+    shell> echo 'a|b|c|d|e' | ${cmd_name} -F'|' -o 3,4
+    shell> echo 'a|b|c|d|e' | ${cmd_name} -F'|' -o 3-4
+    shell> echo 'a|b|c|d|e' | ${cmd_name} -F'|' -m 3 -M 4
+    shell> echo 'a|b|c|d|e' | ${cmd_name} -F'|' -m 3 -l 2
+
+"
+
+OPTIND=
+while getopts 'F:M:O:hl:m:o:' flag
+do
+ case "${flag}" in
+  F) FS="${OPTARG}";;
+  M) max=${OPTARG};;
+  O) ofs="-v OFS=${OPTARG}";;
+  h) echo -n "${usage}${examples}"; 
+     exit 0;;
+  l) len=${OPTARG};;
+  m) min=${OPTARG};;
+  o) only=${OPTARG};;
+  \:) echo -n "${usage}";;
+ esac
+ shift $(( OPTIND - 1 ))
+ OPTIND=
+done
+
+# expect piped input from stdin or a specified file
+if [[ ! -p /dev/stdin && $# -eq 0 ]]
+then
+  echo -n "
+  Egg: We found no input! 
+  ${usage}
+  " >&2
+  exit 1
+fi
+
+## max = min + len 
+if [[ ${max} -le 0 && ${len} -ne -1 ]]
+then
+  max=$(( ${min} + ${len} - 1 ))
+fi
+
+## parse only for min & max
+if [[ "x${only}" != "x" ]]
+then
+
+    # evaluation of each element in the 'only' spec is iterative, and changes the min/max bounds
+    # therefore there is no real advantage to calculating min/max values here.
+    min=1
+    max='NF' 
+    ao="-v only=${only}"
+
+fi
+
+# run awk with args ;)
+awk -F"${FS}" -v "MINF=${min}" -v "MAXF=${max}" ${ao} ${ofs} '
+
+BEGIN { 
+
+  # no longer sure why we specify the array sort order here ;)
+  PROCINFO["sorted_in"] = "@ind_str_asc";
+
+  # if an only-spec has been specified
+  if ( only ){ 
+
+    olen = split(only, os, ","); 
+  
+    # if only a single element is specified
+    if( olen == 0 ){
+      # set the array accordingly
+      os[1] = only
+    }
+
+  } 
+
+  if ( OFS == "" ){
+    sep=" ";
+  }else{
+    sep=OFS;
+  }
+
+} 
+
+{
+
+  #TODO: merge cases / re-normalise
+
+  # reset the output field separator
+  sep = OFS;
+
+  oslen = length(os);
+  
+  nf=split( $0, field, FS, separator ); 
+
+  #if we have an only-spec
+  if ( oslen > 0 ){
+
+    # for each element
+    for ( i=1; i<=oslen; i++ ){
+
+      # get element    
+      n = os[i]; 
+
+      # proced to calculate min/max fields this element represents
+
+      # if n is an integer
+      if ( n ~ /^[0-9]+$/ ){ 
+        n=strtonum(n)
+        s=n; e=n; 
+      }
+
+      #or if n matches a "-" 
+      if ( n ~ /-/ ){
+
+        # extract int values from this element
+        split( n, o, "-" );  
+     
+        # could perhaps merge the regexes and use above... 
+        if ( n ~ /^-[0-9]+$/       ){ s=1; e=strtonum(o[2]); }
+        if ( n ~ /^[0-9]+-$/       ){ s=strtonum(o[1]); e=NF;   }
+        if ( n ~ /^[0-9]+-[0-9]+$/ ){ s=strtonum(o[1]); e=strtonum(o[2]); }
+
+      }
+
+      # singular integer 
+      if ( s == e ){
+
+        # in valid range
+        if ( s > 0 || s <= NF ){ 
+
+          # newline if last o-spec element
+          if( i == oslen ){ 
+            sep = "\n"; 
+          }else{
+            sep = separator[1];
+          }
+
+          # output field + separator
+          printf("%s%s", field[s], sep );
+        }
+            
+      }else{
+
+        # incremental range
+        if( s <= e ){
+             
+          # silently limit upper bound to NF
+          e=( e > NF ? NF : e );
+
+          # for each o-spec element
+          for( j=s; j<e; j++ ){
+            printf("%s%s", field[j], separator[j] );            
+          }
+
+          # newline if last o-spec element
+          if ( i == oslen ){ 
+            sep = "\n"; 
+          }else{
+            sep = separator[e];
+          }
+
+          # output field + separator
+          printf("%s%s", field[e], sep);
+
+        }else{ 
+          
+          # silently limit bounds      
+          s=( s > NF ? NF : s )
+          e=( e < 1  ?  1 : e )
+
+          # for each o-spec element
+          for( j=s; j>e; j-- ){
+            printf("%s%s", field[j], separator[j] );           
+          }
+
+          # newline if last o-spec element
+          if( i == oslen ){ 
+            sep = "\n"; 
+          }else{
+            sep = separator[e];
+          }
+
+          # output field + separator
+          printf("%s%s", field[e], sep);
+
+        }
+      }
+    }
+
+  }else{
+
+    # TODO: allow negative range; rename min/max -> start/end
+
+    # from min to max, print all fields
+    # silently limit to sensible bounds 
+    s=( MINF < 1 ? 1 : MINF );
+    e=( MAXF < 1 || MAXF > NF ? NF : MAXF );
+
+    # sensible bounds
+    if ( ( s > 0 && s <= NF ) && ( e > 0 || e <= NF ) && (s <= e) ) { 
+
+      # for each element
+      for( i=s; i<e; i++ ){
+        
+        # output field + separator
+        printf("%s%s", field[i], separator[i]);
+
+      }
+
+      # newline when last element
+      printf("%s\n", field[i] )
+
+    }
+
+  } 
+
+}
+
+
+' "${@}" 
+

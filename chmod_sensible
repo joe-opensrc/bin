@@ -1,0 +1,113 @@
+#!/bin/bash 
+
+# at least remove world writable permissions
+
+usage="
+
+  Usage: $( basename ${0} ) [-U] [paths...]
+
+  Remove world-writable permissions from paths.
+  Paths can be specified as arguments or passed in via stdin.
+
+  It does not recurse; though it will discriminate sticky-bits and symlinks.
+
+"
+
+user_write_only=1
+intru=1
+sudo=
+
+OPTIND=
+while getopts 'ISUh' flag
+do
+ case "${flag}" in
+  h) echo "${usage}"; exit 0;;
+  I) intru=0;;
+  S) sudo="sudo";;
+  U) user_write_only=0;;
+ esac
+ shift $(( ${OPTIND} - 1 ))
+ OPTIND=
+done
+
+# expect piped input from stdin or a specified file
+if [[ ! -p /dev/stdin && $# -eq 0 ]]
+then
+
+  cmd_name="$( basename ${0} )"
+
+  echo -ne "\nEgg: We found no input!\n${usage}\n  Try:\n   shell> ${cmd_name} <path>\n  or\n   shell> echo \"file list\" | ${cmd_name}\n\n" >&2
+  exit 1
+
+fi
+
+# is intrusive mode enabled?
+if [[ ${intru} -eq 0 ]]
+then
+
+  ans=
+  if [[ -p /dev/stdin ]]
+  then
+
+    # can't count the stream without reading it. 
+    # We could do 'c=$( </dev/stdin )'; but it might be ill-advised,
+    # that is 'rm -I' doesn't do it, so we'll just ask for confirmation here...
+    read -p "Intrusive mode enabled. Proceed [y/N] ? " ans </dev/tty
+
+  else
+
+    # if args are passed in and their number is >3
+    if [[ ${#} -gt 3 ]]
+    then
+
+      #count the number of args; like 'rm -I'
+      read -p "Would you like to change fs permissions for ${#} paths [y/N]? " ans
+
+    else
+
+      # otherwise don't ask for confirmation
+      ans='Y'
+
+    fi
+  fi
+
+  
+  case "${ans}" in
+    Y|y)  ;; #noop
+      *) echo -ne '...Aborted.\n\n'; exit 0;;
+  esac
+fi
+
+IFS=$'\n'
+while read -r path
+do
+
+  # if path exists and is not a symlink or has the sticky bit set
+  if [[ -e "${path}" &&  ! ( -L "${path}" || -k "${path}" ) ]]
+  then
+
+    # set user only write permissions for files/dirs
+    if [[ ${user_write_only} -eq 0 ]]
+    then
+
+      if [[ -f "${path}" ]]
+      then
+        ${sudo} chmod -c 0644 "${path}"
+      elif [[ -d "${path}" ]]
+      then
+        ${sudo} chmod -c 0750 "${path}"
+      else
+        # not a regular file or directory; just strip world-writable
+        ${sudo} chmod -c o-w "${path}"
+      fi
+
+    else
+
+      # just remove world-writable permission
+      ${sudo} chmod -c o-w "${path}"
+    fi
+
+  fi
+
+done <<<"${*:-$(</dev/stdin)}"
+IFS=' \t\n'

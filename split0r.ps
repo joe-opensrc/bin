@@ -1,0 +1,32 @@
+# It's actually quite a 'neat' language :D
+
+param( 
+       [string]$limit=25MB,
+
+       [Parameter(Mandatory=$true)]
+       [string]$filter,
+
+       [string]$odir="./out"
+     )
+
+$sum=0
+$odn=0
+
+Get-Childitem -Filter ${filter} -File | ForEach-Object {  
+
+  $n  = Get-ItemPropertyValue $_ -Name Name ;
+  $fn = Get-ItemPropertyValue $_ -Name FullName ;
+  $s  = Get-ItemPropertyValue $_ -Name Length;
+
+  if ( ( ${sum} + ${s} ) -ge ${limit} ) {
+    $odn = ( ${odn} + 1 )
+    $sum = ${s}
+  }else{
+    $sum = ( ${sum} + ${s} )
+  }
+
+ New-Item -ErrorAction Ignore -ItemType Directory -Path "${odir}_${odn}"
+ Copy-Item ${fn} -Destination "${odir}_${odn}/${n}"
+
+}
+

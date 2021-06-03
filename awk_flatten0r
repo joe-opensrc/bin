@@ -1,0 +1,102 @@
+#!/bin/bash 
+
+### TODO: this came before the awk_field_slicer, so could perhaps take its
+### arg handling / range specifying logic...?
+
+min=1
+max=-1
+len=-1
+AIFS=" "
+AOFS=","
+only=-1
+pivot=1
+
+usage(){
+
+  cname="$(basename $( realpath ${0} ) )"
+
+  cat <<-EOU
+
+  Usage: ${cname} [-F <IFS>] [-M <max>] [-O <OFS>] [-l <len>] [-m <min>] [-o <only>] [-p <pivot]
+
+  -F <IFS>   := Awk Input Field Separator 
+  -O <OFS>   := Awk Output Field Separator 
+  -M <max>   := set highest field for output range
+  -h         := This help message ;)
+  -l <len>   := range of output fields (e.g., min + len)
+  -m <min>   := set lowest field for output range
+  -o <only>  := output only this field
+  -p <pivot> := set pivot column
+
+  e.g., shell> cat /some/input/file | ${cname} -p 3 -o 1 
+
+EOU
+
+}
+
+OPTIND=
+while getopts 'F:O:m:M:p:o:l:h' flag
+do
+
+ case "${flag}" in
+  F) AIFS="${OPTARG}";;
+  O) AOFS="${OPTARG}";;
+  l) len=${OPTARG};;
+  m) min=${OPTARG};;
+  M) max=${OPTARG};;
+  o) only=${OPTARG};;
+  p) pivot="${OPTARG}";;
+  h) usage; exit 0;;
+ esac
+
+ shift $(( OPTIND - 1 ))
+ OPTIND=
+
+done
+
+if [[ $# -eq 0 && ! -p /dev/stdin ]]
+then
+  usage
+  exit 0
+fi
+
+if [[ ${max} -le 0 && ${len} -ne -1 ]]
+then
+ max=$(( ${min} + ${len} - 1 ))
+fi
+
+if [[ ${only} -gt 0 ]]
+then
+ min=${only}
+ max=${only}
+fi
+
+#if (val in array)
+awk -v FS="${AIFS}" -v OFS="${AOFS}" -v "MINF=${min}" -v "MAXF=${max}" -v pivot=${pivot} '
+
+BEGIN{ PROCINFO["sorted_in"] = "@ind_str_asc"; }
+
+{ 
+
+ maxf=MAXF; 
+ cp=$pivot; #get pivot
+
+ line="" # reset line
+ 
+ if ( maxf < 1 || maxf >= NF ){ maxf=NF; }; #limit to length of line
+
+ # set sensible field range 
+ for ( i=MINF; i < maxf; i++ ){ 
+  line=sprintf("%s%s", $i, FS ) 
+ };
+ 
+ # add last one [avoids trims, etc]
+ line=sprintf("%s%s", line, $maxf);
+
+ merged[cp]=sprintf("%s%s%s", merged[cp], OFS, line);
+
+} 
+
+END{ for ( m in merged ){ printf("%s|%s\n", m, substr(merged[m],2) ); fflush(); } }' "${@}"
+
+

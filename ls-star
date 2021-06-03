@@ -1,0 +1,26 @@
+#!/bin/bash 
+
+# TODO: handle '..' properly
+
+dash_args=()
+args=()
+
+# basic arg handling
+while [[ ${#} -gt 0 ]]
+do
+
+  # split dash-args from non-dash-args
+  if [[ "${1:0:1}" == "-" ]]
+  then
+    dash_args+=("${1}")
+  else
+    # add a star to non-dash args
+    args+=("${1}"*)
+  fi
+
+  shift
+
+done
+
+# run  
+ls --color=auto ${dash_args[@]} "${args[@]}"

@@ -1,0 +1,27 @@
+#!/bin/bash 
+
+# translates from iptables-save format into commandline format
+# can use '-D' to create delete / teardown statements
+
+# example: sudo iptables-save | iptsfilter -D
+
+# expensive on the number of subshells, but useful for portability ;)
+root="$( dirname $( realpath ${0} ) )"
+acmd=${root}/iptsfilter.awk
+
+del=1
+while getopts 'D' flag
+do
+ case "${flag}" in
+  D) del=0;; 
+ esac
+done
+
+if [[ ${del} -eq 0 ]]
+then
+  # replace A->D, N->X and reverse line order
+  ${acmd} | sed -e 's/\-A/\-D/' -e 's/\-N/\-X/' | tac
+else
+  # run as-is 
+  ${acmd}
+fi
