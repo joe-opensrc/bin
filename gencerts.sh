@@ -1,6 +1,6 @@
 #!/bin/bash 
 
-cert_config="${1:-~/bin/self_cert.conf}"
+cert_config="${1:-$( dirname ${0} )/self_cert.conf}" 
 if [[ -r ${cert_config} ]]
 then
 
