@@ -1,0 +1,36 @@
+#!/bin/bash 
+
+SINK_INPUT=0
+APP_NAME=1
+
+sinks="$( pactl list sink-inputs | grep -e 'application\.name' -e 'Sink Inp' -e 'Mute' -e 'process\.id'| sed -e 's/^\t\+//' | sed -n '/Sink/ N;N;N; s/\n/|/g; s/\#// p' )"
+
+if [[ "x${sinks}" != "x" ]]
+then
+ syd=$( 
+
+  IFS=$'\n'
+  for sink in ${sinks}
+  do
+
+   IFS='|' xs=( ${sink} )
+   sid=$( echo ${xs[0]} | awk_field_slicer -o 3 )
+   mtd=$( echo ${xs[1]} | awk_field_slicer -o 2 )
+   apn=$( echo ${xs[2]} | awk_field_slicer -m 3 )
+   pid=$( echo ${xs[3]} | awk_field_slicer -o 3 | sed -e 's/"//g' )
+
+   cli=$( cat /proc/${pid}/cmdline )
+
+   echo "${sid}|Muted: ${mtd}|${apn}|${cli}"
+
+  done | column -s'|' -t 
+ )
+
+ syds="$( echo "${syd}" | fzf -0 -e -m +s --cycle --reverse +i --bind alt-space:toggle-all,alt-x:select-all --preview='echo {}' --preview-window='wrap' | awk_field_slicer -o 1 )"
+
+ for s in ${syds}
+ do 
+  pactl set-sink-input-mute ${s} toggle
+ done
+
+fi
