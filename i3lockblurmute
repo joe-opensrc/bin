@@ -1,0 +1,10 @@
+#!/bin/bash 
+
+### TODO: leave muted on unlock?
+
+# mute
+volume-manager.sh -m
+# i3lock with blur; nofork
+i3lockblur -n
+# unmute 
+volume-manager.sh -M 
