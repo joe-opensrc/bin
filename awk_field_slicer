@@ -136,7 +136,7 @@ BEGIN {
       # get element    
       n = os[i]; 
 
-      # proced to calculate min/max fields this element represents
+      # proceed to calculate min/max fields this element represents
 
       # if n is an integer
       if ( n ~ /^[0-9]+$/ ){ 
