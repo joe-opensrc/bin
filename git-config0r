@@ -1,0 +1,21 @@
+#!/bin/bash 
+
+IFS=$'\n'
+
+ues=()
+ues+=( "Real Name|null@example.org"
+
+ue=$( echo "${ues[*]}" |  fzf --tac --reverse -d '|' )
+ user="$( echo ${ue} | cut -d'|' -f 1 )"
+email="$( echo ${ue} | cut -d'|' -f 2 )"
+
+git config user.name  "${user}"
+git config user.email "${email}"
+
+git config author.name  "${user}"
+git config author.email "${email}"
+
+# Cos checking is for wimps; or people with more time...
+echo "User/author set to < ${user} ${email} >"
+
+IFS=$' \t\n'
