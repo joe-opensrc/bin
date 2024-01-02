@@ -3,7 +3,7 @@
 IFS=$'\n'
 
 ues=()
-ues+=( "Real Name|null@example.org"
+ues+=( "Real Name|null@example.org" )
 
 ue=$( echo "${ues[*]}" |  fzf --tac --reverse -d '|' )
  user="$( echo ${ue} | cut -d'|' -f 1 )"
