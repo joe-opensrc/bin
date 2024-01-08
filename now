@@ -2,12 +2,46 @@
 
 f='+%Y%m%d-%H%M%S'
 
-# if 'date' only
-if [[ ${#} -eq 1 && "${1}" == "-d" ]]
+int_append=1
+
+usg="$( basename ${0} ) [12345dhi] [-h]
+
+-1 == YYYYMMDD-hhmmss
+-2 == YYYY-MM-DD
+-3 == <YYYY-MM-DD [hh:mm:ss]>
+-4 == <YYYY-MM-DD>
+-5 == <## YYYY-MM-DD ##>
+-6 == [hh:mm:ss]
+
+-d == YYYYMMDD
+-i == YYYYMMDD.1 
+-t == [HH:mm:ss]
+"
+
+
+OPTIND=
+while getopts '123456diht' flag
+do
+ case "${flag}" in
+   1) f='+%Y%m%d-%H%M%S';;
+   2) f='+%Y-%m-%d';;
+   3) f='+<%Y-%m-%d [%H:%M:%S]>';;
+   4) f='+<%Y-%m-%d>';;
+   5) f='+<## %Y-%m-%d ##>';;
+   6) f='+[%H:%M:%S]';;
+   d) f='+%Y%m%d';;
+   i) f='+%Y%m%d'; int_append=0;;
+   h) echo -ne "\n${usg}\n\n"; exit 0;;
+   t) f='+%T';;
+ esac
+ shift $(( ${OPTIND} - 1 ))
+ OPTIND=
+done
+
+if [[ ${int_append} -eq 0 ]] 
 then
-
-  f='+%Y%m%d'
-
+  f="${f}.1" # need check for regex and increment
 fi
 
-date "${f}"
+dout=$( date "${f}" )
+echo -ne "${dout}"
